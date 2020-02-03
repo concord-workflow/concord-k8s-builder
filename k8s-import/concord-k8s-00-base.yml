@@ -20,7 +20,7 @@ configuration:
     # --------------------------------------------------------------------------------------------------------------------
     k8sImport: "${workDir}/k8s-import"
     terraformImport: "${workDir}/k8s-import"
-    profile: "${workDir}/k8s-profiles/${clusterRequest.profile}"
+    profile: "${workDir}/concord-k8s-profiles/${clusterRequest.profile}"
 
 flows:
 
@@ -185,7 +185,7 @@ flows:
   # like a fully-populated clusterRequest and secrets being present
   prereqs:
 
-    - task: k8sValidate
+    #- task: k8sValidate
 
     - if: ${!context.hasVariable('augment')}
       then:

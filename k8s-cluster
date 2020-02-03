@@ -52,7 +52,7 @@ elif [ "$action" == "destroy" ]; then
 fi
 
 # By default we want to run the cluster flow
-entryPoint="-F cluster"
+entryPoint="-F entryPoint=build"
 
 # This allows us to start with any arbitrary Concord flow
 [ ! -z "$flow" ] && entryPoint="-F entryPoint=normalFlow -F arguments.flow=$flow"
@@ -83,17 +83,17 @@ done
 cd target && zip -x terraform/.terraform/**\* -r payload.zip ./* > /dev/null && cd ..
 
 if [ "$testMode" == "true" ]; then
-  echo curl -L -i -H "Authorization: ${CONCORD_API_TOKEN}" \
-   -F archive=@target/payload.zip \
-   -F org=${CONCORD_ORGANIZATION} \
-   -F project=${projectName} \
+  echo curl -L -i -H \"Authorization: ${CONCORD_API_TOKEN}\" \
+   -F "archive=@target/payload.zip" \
+   -F "org=${CONCORD_ORGANIZATION}" \
+   -F "project=${projectName}" \
    ${entryPoint} \
    http://${CONCORD_HOST_PORT}/api/v1/process
 else
   curl -L -i -H "Authorization: ${CONCORD_API_TOKEN}" \
-   -F archive=@target/payload.zip \
-   -F org=${CONCORD_ORGANIZATION} \
-   -F project=${projectName} \
+   -F "archive=@target/payload.zip" \
+   -F "org=${CONCORD_ORGANIZATION}" \
+   -F "project=${projectName}" \
    ${entryPoint} \
    http://${CONCORD_HOST_PORT}/api/v1/process
 fi

@@ -19,11 +19,10 @@ flows:
   # --------------------------------------------------------------------------------------------------------------------
 
   terraform:
-    - terraformCheckout
     - terraformProcessor
     - terraformExecution
 
-  terraformCheckout:
+  terraformProcessor:
 
     - task: git
       in:
@@ -31,8 +30,6 @@ flows:
         url: "https://github.com/jvanzyl/concord-terraform.git"
         baseBranch: "${terraformResourcesTag}"
         workingDir: "${terraformResources}"
-
-  terraformProcessor:
 
     - task: terraformProcessor
       in:

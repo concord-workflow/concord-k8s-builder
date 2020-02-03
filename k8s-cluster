@@ -61,15 +61,21 @@ entryPoint="-F cluster"
 # example, which is also the name of the directory:
 projectName="concord-k8s-builder"
 
+if [ -d concord-k8s-builder ]; then
+  prefix="concord-k8s-builder/"
+else
+  prefix=""
+fi
+
 rm -rf target && mkdir target
 cp $concordYml target/concord.yml
-cp -R k8s-import target/k8s-import
-cp -R forms  target/
-cp -R k8s-profiles  target/
+cp -R ${prefix}k8s-import target/k8s-import
+cp -R ${prefix}forms  target/
+cp -R concord-k8s-profiles target/
 
 # Copy all our standard imports into the payload
 mkdir target/concord
-for yml in `ls k8s-import/concord-k8s-*.yml`
+for yml in `ls ${prefix}k8s-import/concord-k8s-*.yml`
 do
   cp $yml target/concord
 done

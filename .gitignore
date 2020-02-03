@@ -1,0 +1,21 @@
+#  Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# .tfvars files
+*.tfvars
+
+# Binary material
+**/target
+**/bin/aws-iam-authenticator
+**/bin/eksctl
+**/bin/helm
+**/bin/kubectl
+**/bin/tiller
+
+# Maven/Java
+pom.xml
+*.iml

@@ -1,0 +1,51 @@
+flows:
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Cert Manager
+  # --------------------------------------------------------------------------------------------------------------------
+
+  cert-manager:
+    # Install the CustomResourceDefinition resources separately
+    - task: kubectl
+      in:
+        command: apply
+        validate: false
+        file: "${k8sImport}/06-cert-manager/00-crds.yaml"
+        envars: ${clusterRequest.envars}
+
+    # Create the namespace for cert-manager
+    - task: kubectl
+      in:
+        command: create
+        namespace:
+          name: cert-manager
+        envars: ${clusterRequest.envars}
+
+    # Add the Jetstack Helm repository and update is implied
+    - task: helm
+      in:
+        command: repo
+        add:
+          name: jetstack
+          url: https://charts.jetstack.io
+        envars: ${clusterRequest.envars}
+
+    # Install the cert-manager Helm chart
+    - task: helm
+      in:
+        command: upgrade
+        chart:
+          name: cert-manager
+          namespace: cert-manager
+          version: v0.12.0
+          value: jetstack/cert-manager
+        envars: ${clusterRequest.envars}
+
+    - switch: ${clusterRequest.environment}
+      production:
+        - "${k8sContext.ingressAnnotation(context, 'cert-manager.io/cluster-issuer: letsencrypt-prod')}"
+        - "${k8sContext.postManifest(context, '06-cert-manager/cluster-issuer-letencrypt-prod.yml')}"
+      default:
+        - "${k8sContext.ingressAnnotation(context, 'cert-manager.io/cluster-issuer: letsencrypt-staging')}"
+        - "${k8sContext.postManifest(context, '06-cert-manager/cluster-issuer-letencrypt-staging.yml')}"
+

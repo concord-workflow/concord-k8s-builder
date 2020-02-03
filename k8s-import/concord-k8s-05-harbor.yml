@@ -1,0 +1,26 @@
+flows:
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Harbor
+  # --------------------------------------------------------------------------------------------------------------------
+
+  harbor:
+    - task: helm
+      in:
+        command: repo
+        add:
+          name: harbor
+          url: https://helm.goharbor.io
+        envars: ${clusterRequest.envars}
+
+    - task: helm
+      in:
+        command: upgrade
+        chart:
+          name: harbor
+          namespace: harbor
+          version: v1.2.3
+          value: harbor/harbor
+          values: "${profile}/harbor/values.yaml"
+        envars: ${clusterRequest.envars}
+

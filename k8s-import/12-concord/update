@@ -1,0 +1,9 @@
+#!/bin/sh
+
+#source=/Users/jason.vanzyl/js/concord/concord-chart
+source=/Users/jvanzyl/js/concord/concord-chart
+target=./chart
+
+rm -rf $target
+cp -R $source $target
+( cd $target ; rm -rf .git )

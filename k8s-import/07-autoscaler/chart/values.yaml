@@ -1,0 +1,9 @@
+cloudProvider: aws
+autoscaler:
+  image:
+    repository: k8s.gcr.io/cluster-autoscaler
+    tag: v1.14.6 # use the k8s cluster version x.y versions dont update to latest
+    command:
+      clustername: ${clusterRequest.clusterName}
+  pullPolicy: Always
+  replicas: 1

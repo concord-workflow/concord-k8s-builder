@@ -1,0 +1,88 @@
+name: fluentbit
+
+serviceAccount:
+  # Specifies whether a ServiceAccount should be created
+  create: true
+  # The name of the ServiceAccount to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: fluentbit
+
+
+parsers:
+  enabled: false
+  regex: []
+  logfmt: []
+  json: []
+
+
+input:
+  tail:
+    path: /var/log/containers/*.log
+    parser: docker
+    memBufLimit: 5MB
+
+trackOffsets:
+  test: ok
+
+service:
+  flush: 10
+  logLevel: info
+
+parsers:
+  enabled: true
+
+metrics:
+  enabled: true
+
+filter:
+  kubeTag: feye-logs.copss-${clusterRequest.clusterId}
+  kubeURL: https://kubernetes.default.svc:443
+  kubeCAFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+  kubeTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+  kubeTagPrefix: feye-logs.copss-${clusterRequest.clusterId}.var.log.containers.
+  mergeJSONLog: on
+  enableParser: on
+  enableExclude: on
+  mergeLogKey: log_processed
+  labels: on
+
+backend:
+  type: forward
+  forward:
+    host: log-ingest-dev.sre.apps.fireeye.com
+    port: 24225
+    shared_key: ""
+    enable_tls: true
+    tls_verify: On
+    tls_debug: 0
+    fluent_pem: ""
+    fluent_cert: ""
+    fluent_bit_secret: fluentbit
+    fluent_bit_secret_key: FLUENTKEY
+    fluent_bit_config_map_host: fluent-bit-host-config
+    fluent_bit_config_map_host_key: FLUENTHOST
+
+rbac:
+  apiVersion: rbac.authorization.k8s.io/v1beta1
+
+extraEntries:
+  input: |-
+#     # >=1 additional Key/Value entrie(s) for existing Input section
+  filter: |-
+#     # >=1 additional Key/Value entrie(s) for existing Filter section
+  output: |-
+
+rawConfig: |-
+  @INCLUDE fluent-bit-service.conf
+  @INCLUDE fluent-bit-input.conf
+  @INCLUDE fluent-bit-filter.conf
+  @INCLUDE fluent-bit-output.conf
+
+rbac:
+  create: true
+
+image:
+  fluent_bit:
+    repository: fluent/fluent-bit
+    tag: 1.3.5
+  pullPolicy: Always

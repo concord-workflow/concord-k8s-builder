@@ -1,0 +1,122 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: server-conf
+data:
+{{ (tpl (.Files.Glob "files/s3proxy.conf").AsConfig . ) | indent 2 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s3proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: s3proxy
+  template:
+    metadata:
+      labels:
+        app: s3proxy
+    spec:
+      containers:
+        - name: s3proxy
+          image: {{ .Values.repository }}:{{ .Values.tag }}
+          imagePullPolicy: "{{ .Values.imagePullPolicy }}"
+          volumeMounts:
+          - name: "cfg"
+            mountPath: "/opt/s3proxy/s3proxy.conf"
+            subPath: s3proxy.conf
+          env:
+          - name: JAVA_TOOL_OPTIONS
+            value: "{{ .Values.javaOps }}"
+          ports:
+          - containerPort: 8081
+      volumes:
+        - name: cfg
+          configMap:
+            name: server-conf
+{{- if eq .Values.expose.type "nodePort" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s3proxy
+  labels:
+    app: s3proxy
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: {{ .Values.expose.port }}
+      targetPort: 8081
+  selector:
+    app: s3proxy
+{{- else if eq .Values.expose.type "loadBalancer" }}
+{{- $loadBalancer := .Values.expose.loadBalancer }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s3proxy
+  labels:
+    app: s3proxy
+spec:
+  type: LoadBalancer
+  {{- with $loadBalancer.sourceRanges }}
+  loadBalancerSourceRanges:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if $loadBalancer.IP }}
+  loadBalancerIP: {{ $loadBalancer.IP }}
+  {{- end }}
+  ports:
+    - name: http
+      port: {{ .Values.expose.port }}
+      targetPort: 8081
+  selector:
+    app: s3proxy
+{{- else if eq .Values.expose.type "ingress" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s3proxy
+  labels:
+    app: s3proxy
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: {{ .Values.expose.port }}
+      targetPort: 8081
+  selector:
+    app: s3proxy
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: concord-ingress
+{{- if .Values.expose.ingress.annotations }}
+{{- with .Values.expose.ingress.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+{{- end }}
+spec:
+  {{- if .Values.expose.tls.enabled }}
+  tls:
+    - secretName: {{ .Values.expose.tls.secretName }}
+      hosts:
+        - {{ .Values.expose.ingress.host }}
+  {{- end }}
+  rules:
+  - host: {{ .Values.expose.ingress.host }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: s3proxy
+          servicePort: {{ .Values.expose.port }}
+{{- end }}

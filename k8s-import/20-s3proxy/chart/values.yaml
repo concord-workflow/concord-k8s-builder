@@ -1,0 +1,36 @@
+repository: jvanzyl/s3proxy
+tag: 0.0.7
+imagePullPolicy: Always
+authorization: none
+javaOpts: "-Xmx512m"
+
+provider: aws-s3
+aws:
+  region: ""
+  accessKey: ""
+  secretKey: ""
+
+  expose:
+    port: 8081
+    type: ingress
+    tls:
+      enabled: true
+      secretName: s3proxy-tls
+    ingress:
+      host: s3proxy.yourdomain.com
+      annotations:
+        ingress.kubernetes.io/ssl-redirect: "true"
+        ingress.kubernetes.io/proxy-body-size: "0"
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
+        nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nodePort:
+      ports:
+        http:
+          port: 8081
+    loadBalancer:
+      IP: ""
+      ports:
+        httpPort: 8081
+        httpsPort: 8443
+      annotations: {}
+      sourceRanges: []

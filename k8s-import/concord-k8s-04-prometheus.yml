@@ -1,0 +1,24 @@
+flows:
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Prometheus
+  # --------------------------------------------------------------------------------------------------------------------
+
+  prometheus:
+
+    - task: helm
+      in:
+        command: upgrade
+        chart:
+          name: prometheus-operator
+          version: 6.11.0
+          namespace: telemetry
+          value: stable/prometheus-operator
+          values: "${profile}/prometheus/values.yaml"
+        envars: ${clusterRequest.envars}
+
+    # We are letting the rest of the cluster construction process that
+    # Prometheus is enabled. Any of chart being installed can look for
+    # this feature being set to determine is P8s service monitors
+    # should be installed.
+    - ${k8sContext.enableFeature('prometheus')}

@@ -1,0 +1,17 @@
+flows:
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Concord
+  # --------------------------------------------------------------------------------------------------------------------
+
+  concord:
+    - task: helm
+      in:
+        command: upgrade
+        chart:
+          name: concord
+          namespace: concord
+          value: "${k8sImport}/12-concord/chart"
+          values: "${profile}/concord/values.yaml"
+        envars: ${clusterRequest.envars}
+

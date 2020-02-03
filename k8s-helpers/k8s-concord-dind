@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+kubectl exec -it $1 --container dind /bin/sh -n concord

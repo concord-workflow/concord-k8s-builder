@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# ------------------------------------------------------------------------------
+# Displays the cluster inventory including:
+#   - id
+#   - postManifests
+#   - ingressAnnotations
+# ------------------------------------------------------------------------------
+
+source $HOME/.concord/concord.bash
+[ -z "$1" ] && echo && echo "You must provide the clusterId from your clusterRequest." && echo && exit
+concord_cluster_inventory "$1" | jq

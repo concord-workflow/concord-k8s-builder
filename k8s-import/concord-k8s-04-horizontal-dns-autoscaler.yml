@@ -1,0 +1,16 @@
+flows:
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Horizontal DNS Autoscaler
+  # --------------------------------------------------------------------------------------------------------------------
+
+  horizontal-dns-autoscaler:
+    - task: helm
+      in:
+        command: upgrade
+        chart:
+          name: horizontal-dns-autoscaler
+          value: "${k8sImport}/09-dns-autoscaler/chart"
+          values: "${profile}/horizontal-dns-autoscaler/values.yaml"
+        envars: ${clusterRequest.envars}
+

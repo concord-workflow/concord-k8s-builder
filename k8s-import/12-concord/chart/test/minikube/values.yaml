@@ -1,0 +1,39 @@
+version: 1.37.2-SNAPSHOT
+registry: jvanzyl
+
+host: concord.ngrok.io
+
+expose:
+  type: nodePort
+
+github:
+  enabled: true
+  domain: github.com
+  secret: 0683e010feb0ec5f386a55094bffec69
+
+agent:
+  dockerHost: tcp://127.0.0.1:6666
+  repositories:
+    - id: central
+      url: https://repo1.maven.org/maven2/
+    - id: jvz
+      url: https://oss.sonatype.org/content/repositories/snapshots
+  resources:
+    requests:
+      memory: 1G
+      cpu: 1
+    limits:
+      memory: 1.5G
+      cpu: 1
+
+dind:
+  resources:
+    requests:
+      memory: 1G
+      cpu: 1
+    limits:
+      memory: 1.5G
+      cpu: 1
+
+devMode: false
+ccdMode: true

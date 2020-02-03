@@ -1,0 +1,25 @@
+flows:
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Polaris
+  # --------------------------------------------------------------------------------------------------------------------
+
+  polaris:
+   # Add the fairwinds Helm repository and update is implied
+    - task: helm
+      in:
+        command: repo
+        add:
+          name: reactiveops-stable
+          url: https://charts.fairwinds.com/stable
+        envars: ${clusterRequest.envars}
+
+    - task: helm
+      in:
+        command: upgrade
+        chart:
+          name: polaris
+          namespace: polaris
+          version: 0.7.1
+          value: reactiveops-stable/polaris
+        envars: ${clusterRequest.envars}

@@ -1,0 +1,298 @@
+configuration:
+  debug: false
+  runner:
+    events:
+      recordTaskInVars: true
+
+  dependencies:
+    - "mvn://ca.vanzyl.concord.plugins:concord-k8s-plugin:0.0.10"
+    - "mvn://com.walmartlabs.concord.plugins:git:1.22.0"
+    - "mvn://com.walmartlabs.concord.plugins:terraform-task:1.22.0"
+
+  arguments:
+    # --------------------------------------------------------------------------------------------------------------------
+    # Bootstrap
+    # --------------------------------------------------------------------------------------------------------------------
+    bootstrap: {}
+
+    # --------------------------------------------------------------------------------------------------------------------
+    # Internal
+    # --------------------------------------------------------------------------------------------------------------------
+    k8sImport: "${workDir}/k8s-import"
+    terraformImport: "${workDir}/k8s-import"
+    profile: "${workDir}/k8s-profiles/${clusterRequest.profile}"
+
+flows:
+
+  # This is something coming in v2 where you can get access to the whole flow state and verifications
+  # can be made
+  #validate-flow-names:
+
+  # Add some information to the cluster request that we don't want the user to change
+  augment:
+    - set:
+        # This can't be put here yet as we don't lazily resolve variables
+        #clusterRequest.clusterId: "${clusterRequest.clusterName}-${clusterRequest.region}-${clusterRequest.environment}"
+        clusterRequest.kubeconfigName: "kubeconfig-${clusterRequest.clusterId}"
+        clusterRequest.kubeconfigFile: "/home/concord/.kube/${clusterRequest.kubeconfigName}"
+        clusterRequest.envars:
+          KUBECONFIG: "${clusterRequest.kubeconfigFile}"
+          AWS_ACCESS_KEY_ID: "${clusterRequest.aws.accessKey}"
+          AWS_SECRET_ACCESS_KEY: "${clusterRequest.aws.secretKey}"
+          PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/concord/bin"
+
+  show-variables:
+    - log: "                   profile: ${clusterRequest.profile}"
+    - log: "                   account: ${clusterRequest.account}"
+    - log: "                      user: ${clusterRequest.user}"
+    - log: "                    region: ${clusterRequest.region}"
+    - log: "               environment: ${clusterRequest.environment}"
+    - log: "               clusterName: ${clusterRequest.clusterName}"
+    - log: "                 clusterId: ${clusterRequest.clusterId}"
+    - log: "                  provider: ${clusterRequest.provider}"
+    - log: "                builder.id: ${clusterRequest.builder.id}"
+    - log: "            kubeconfigName: ${clusterRequest.kubeconfigName}"
+    - log: "            kubeconfigFile: ${clusterRequest.kubeconfigFile}"
+    - log: "                    envars: ${clusterRequest.envars}"
+    - log: "             aws.accessKey: XXX"
+    - log: "             aws.secretKey: XXX"
+    - log: "            aws.homeRegion: ${clusterRequest.aws.homeRegion}"
+    - log: "          aws.backupRegion: ${clusterRequest.aws.backupRegion}"
+    - log: "                  aws.tags: ${clusterRequest.aws.tags}"
+    - log: "                  vpc_name: ${clusterRequest.terraformResources[0].variables.vpc_name}"
+    - log: "        terraformDirectory: ${terraformDirectory}"
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Cluster Request Validation
+  # --------------------------------------------------------------------------------------------------------------------
+  # - make sure the cluster id has not been used before in production: too many resources bound to the name and overwriting
+  #   the kubeconfig for a production cluster could potentially be very bad
+  # - make sure all required resources needed to construct the cluster are present
+  #   - requested vpc cidr
+  #   - all permissions required by the provider
+  # --------------------------------------------------------------------------------------------------------------------
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Build Cluster
+  # --------------------------------------------------------------------------------------------------------------------
+  # TODO: support EksCtl without the use of a template
+  # TODO: support GCE
+  # TODO: support Azure
+  # --------------------------------------------------------------------------------------------------------------------
+
+  cluster:
+    - if: ${clusterRequest.provider.equals('aws')}
+      then:
+        - if: ${clusterRequest.builder.id.equals('eksctl')}
+          then:
+            - log: "We are building a cluster on ${clusterRequest.provider} using ${clusterRequest.builder.id} ..."
+            - terraform
+            - eksctl
+
+  concordKubeconfig:
+    - task: concordKubeconfig
+      in:
+        organization: "${projectInfo.orgName}"
+        name: "${clusterRequest.kubeconfigName}"
+        file: "${clusterRequest.kubeconfigFile}"
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Post Manifest Installation
+  # --------------------------------------------------------------------------------------------------------------------
+  # Kubenetes manifests that need to be installed after all cluster creation operations have completed and
+  # before any application helm charts are installed.
+  #
+  # It is assumed that the what has been stored is the relative path from ${k8sImport}. We store it as such
+  # because ${k8sImport} will change from process to process and we need to prefix the current value with
+  # the relative path to get the correct location for a particular run.
+  # --------------------------------------------------------------------------------------------------------------------
+
+  postManifests:
+    - if: ${k8sContext.postManifests(context).size() > 0}
+      then:
+        - log: "There are postManifests to install: ${k8sContext.postManifests(context)}"
+        - log: "k8sImport: ${k8sImport}"
+
+        - task: kubectl
+          in:
+            command: apply
+            file: "${k8sImport}/${item}"
+            envars: ${clusterRequest.envars}
+          withItems: ${k8sContext.postManifests(context)}
+
+  manifests:
+    - if: ${directoryTool.exists(directory)}
+      then:
+        - log: "There are manifests to install in ${directory}..."
+        - task: kubectl
+          in:
+            command: apply
+            file: "${item}"
+            envars: ${clusterRequest.envars}
+          withItems: ${directoryTool.scan(directory)}
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Resilient Flow
+  # --------------------------------------------------------------------------------------------------------------------
+  # Wraps any flow in a checkpoint with retries
+
+  resilientFlow:
+
+    - prereqs
+
+    # Pre flow manifest installation
+    - call: manifests
+      in:
+        directory: "${profile}/${flow}/pre"
+
+    - try:
+        - checkpoint: "${flow}"
+        - call: "${flow}"
+          retry:
+            times: 3
+            delay: 30
+      error:
+        - log: "${flow}: failed with ${lastError.cause}"
+        - throw: "${lastError.cause}"
+
+    # Post flow manifest installation
+    - call: manifests
+      in:
+        directory: "${profile}/${flow}/post"
+
+  # Non-wrapped flow if you want to debug without it waiting for all the retries to fail to see the error
+  normalFlow:
+
+    - prereqs
+
+    # Pre flow manifest installation
+    - call: manifests
+      in:
+        directory: "${profile}/${flow}/pre"
+
+    - try:
+        - call: "${flow}"
+      error:
+        - log: "${flow}: failed with ${lastError.cause}"
+        - throw: "${lastError.cause}"
+
+    # Post flow manifest installation
+    - call: manifests
+      in:
+        directory: "${profile}/${flow}/post"
+
+  # Primary used when calling individual flows to make sure the basic requirements are present in the context
+  # like a fully-populated clusterRequest and secrets being present
+  prereqs:
+
+    - task: k8sValidate
+
+    - if: ${!context.hasVariable('augment')}
+      then:
+        - call: augment
+        - if: ${vars.get('clusterRequest.debug', false)}
+          then:
+            - show-variables
+        - set:
+            augment: true
+
+    - if: ${!context.hasVariable('secrets')}
+      then:
+        - if: ${clusterRequest.provider.equals('aws')}
+          then:
+            - log: "Using AWS secrets processing..."
+            - asmSecrets
+            - asmKubeconfigGet
+            - awsIamAuthenticator
+
+        - if: ${clusterRequest.provider.equals('gcp')}
+          then:
+            - log: "Using GCP secrets processing..."
+
+        - if: ${clusterRequest.provider.equals('azure')}
+          then:
+            - log: "Using Azure secrets processing..."
+
+        - concordKubeconfig
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Destroy
+  # --------------------------------------------------------------------------------------------------------------------
+
+  # TODO: The EKSCTL destroy is mixed up in here, but we need to account for not using Terraform with EKSCTL at all
+  # TODO: tag kubeconfig as deleted, keep it just in case but allow filtering it out
+  destroy:
+
+    - show-variables
+    - terraformProcessor
+
+    - task: terraform
+      in:
+        toolVersion: "${terraformVersion}"
+        debug: ${terraformDebug}
+        action: plan
+        destroy: true
+        dir: "${terraformDirectory}"
+        stateId: ${clusterRequest.clusterId}
+        varFiles:
+          - "${workDir}/${terraformDirectory}/00.auto.tfvars.json"
+
+    - if: ${!result.hasChanges}
+      then:
+        - log: "No changes planned, stopping..."
+        - exit
+
+    - form: approvalForm
+      fields:
+        - plan: { type: "string", readonly: true, value: "${result.output}" }
+        - approved: { type: "boolean" }
+      values:
+        processId: "${txId}"
+      yield: true
+
+    - if: ${!approvalForm.approved}
+      then:
+        - throw: "The plan to destroy was not approved"
+
+    - eksctlDestroy
+
+    - task: terraform
+      in:
+        toolVersion: "${terraformVersion}"
+        debug: ${terraformDebug}
+        verbose: ${terraformDebug}
+        action: apply
+        plan: ${result.planPath}
+        stateId: ${clusterRequest.clusterId}
+      retry:
+        times: 3
+        delay: 30
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Test flows
+  # --------------------------------------------------------------------------------------------------------------------
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Cluster Inventory
+  # --------------------------------------------------------------------------------------------------------------------
+  #
+  # - add some ingress annotations
+  # - add some post manifests
+  # - display the cluster
+  #
+  # We need to be able to execute any part of the flow in isolation and get the right information about the cluster.
+  # For example, we need to be able to install a single application using helm and have the right ingress annotations
+  # be applied.
+
+  test-cluster-inventory:
+    - ${k8sContext.ingressAnnotation(context, 'annotation-one')}
+    - log: ${k8sContext.cluster(context)}
+    - ${k8sContext.ingressAnnotation(context, 'annotation-two')}
+    - log: ${k8sContext.cluster(context)}
+    - ${k8sContext.postManifest(context, 'post-one')}
+    - log: ${k8sContext.cluster(context)}
+    - ${k8sContext.postManifest(context, 'post-two')}
+    - log: ${k8sContext.cluster(context)}
+
+  test-helm-flow:
+    - log: "test-helm-flow"

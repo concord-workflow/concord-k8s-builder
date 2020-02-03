@@ -1,0 +1,14 @@
+{{- if .Values.agent.repositories }}
+{
+  "repositories" : {{ .Values.agent.repositories | toPrettyJson | indent 4 | trim }}
+}
+{{- else }}
+{
+  "repositories": [
+    {
+      "id": "central",
+      "url": "https://repo1.maven.org/maven2/"
+    }
+  ]
+}
+{{- end }}

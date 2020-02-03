@@ -1,0 +1,19 @@
+flows:
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # S3Proxy
+  # --------------------------------------------------------------------------------------------------------------------
+  # NOTES:
+  # - https://stackoverflow.com/questions/53590226/cant-download-plugins-using-kubernetes-jenkins-problem-with-kube-dns
+
+  s3proxy:
+    - task: helm
+      in:
+        command: upgrade
+        chart:
+          name: s3proxy
+          namespace: s3proxy
+          value: "${k8sImport}/20-s3proxy/chart"
+          values: "${profile}/s3proxy/values.yaml"
+        envars: ${clusterRequest.envars}
+

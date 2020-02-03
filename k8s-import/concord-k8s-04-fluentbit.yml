@@ -1,0 +1,17 @@
+flows:
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Fluentbit
+  # --------------------------------------------------------------------------------------------------------------------
+
+  fluentbit:
+    - task: helm
+      in:
+        command: upgrade
+        chart:
+          name: fluentbit
+          namespace: logging
+          value: "${k8sImport}/04-fluentbit/chart"
+          values: "${profile}/fluentbit/values.yaml"
+        envars: ${clusterRequest.envars}
+

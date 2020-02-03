@@ -1,0 +1,109 @@
+# --------------------------------------------------------------------------------------------------------------------
+# AWS
+# --------------------------------------------------------------------------------------------------------------------
+
+flows:
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # EKSCTL
+  # --------------------------------------------------------------------------------------------------------------------
+  # TODO: integrate eksctl cluster yaml in the task itself
+
+  eksctl:
+    - task: eksctlYml
+      in:
+        clusterRequest: "${clusterRequest}"
+        vpcTerraformOutput: "${result.data}"
+        configFile: "${clusterRequest.clusterId}-eksctl.yaml"
+
+    - awsIamAuthenticator
+
+    - task: eksctl
+      in:
+        command: create
+        version: "${clusterRequest.builder.version}"
+        cluster:
+          configFile: "${clusterRequest.clusterId}-eksctl.yaml"
+          kubeconfig: "${clusterRequest.kubeconfigFile}"
+        envars: ${clusterRequest.envars}
+
+    # Write the kubeconfig into Concord's secret store and to the agent
+    - concordKubeconfig
+
+    # Take the kubeconfig from Concord's secret store and write it into AWS Secrets Manager
+    - asmKubeconfig
+
+  eksctlDestroy:
+    - task: eksctl
+      in:
+        command: delete
+        version: "${clusterRequest.builder.version}"
+        cluster:
+          name: "${clusterRequest.clusterName}"
+          region: "${clusterRequest.region}"
+          wait: true
+        envars: ${clusterRequest.envars}
+      retry:
+        times: 3
+        delay: 30
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Secrets
+  # --------------------------------------------------------------------------------------------------------------------
+  # A document with the name of your Concord organization is retrieved from AWS Secrets Manager and are made
+  # available to the Concord context via the ${secrets} variable. If you have an element in the document called
+  # `adminUsername` it will be available in Concord flows as `${secrets.adminUsername}`.
+  # --------------------------------------------------------------------------------------------------------------------
+
+  asmSecrets:
+    - try:
+      - task: asmSecrets
+        in:
+          homeRegion: "${clusterRequest.aws.homeRegion}"
+          awsAccessKey: "${clusterRequest.aws.accessKey}"
+          awsSecretKey: "${clusterRequest.aws.secretKey}"
+      error:
+        - log: "There is no organizational secrets document. You must create one to continue."
+        - log: "${flow}: failed with ${lastError.cause}"
+        - throw: "${lastError.cause}"
+
+  asmKubeconfig:
+    - task: asmKubeconfig
+      in:
+        kubeconfigName: "${clusterRequest.kubeconfigName}"
+        awsAccessKey: "${clusterRequest.aws.accessKey}"
+        awsSecretKey: "${clusterRequest.aws.secretKey}"
+        regions:
+          - ${clusterRequest.aws.homeRegion}
+          - ${clusterRequest.aws.backupRegion}
+
+  asmKubeconfigGet:
+    - task: asmKubeconfigGet
+      in:
+        kubeconfigName: "${clusterRequest.kubeconfigName}"
+        awsAccessKey: "${clusterRequest.aws.accessKey}"
+        awsSecretKey: "${clusterRequest.aws.secretKey}"
+        regions:
+          - ${clusterRequest.aws.homeRegion}
+          - ${clusterRequest.aws.backupRegion}
+
+  awsIamAuthenticator:
+    - task: downloadTools
+      in:
+        tool: aws-iam-authenticator
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # AWS CSI Driver
+  # --------------------------------------------------------------------------------------------------------------------
+
+  aws-ebs-csi-driver:
+    - task: helm
+      in:
+        command: upgrade
+        chart:
+          name: aws-ebs-csi-driver
+          namespace: kube-system
+          version: v0.11.0
+          value: https://github.com/kubernetes-sigs/aws-ebs-csi-driver/releases/download/v0.4.0/helm-chart.tgz
+          values: "${profile}/aws-ebs-csi-driver/values.yaml"
+        envars: ${clusterRequest.envars}

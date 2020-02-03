@@ -1,0 +1,132 @@
+# Concord version
+version: 1.37.1
+registry: walmartlabs
+imagePullPolicy: IfNotPresent
+
+# --------------------------------------------------------------------------------------------------------------------
+# Ingress/Nodeport/ClusterIP
+# --------------------------------------------------------------------------------------------------------------------
+
+expose:
+  port: 8080
+  type: ingress
+  tls:
+    enabled: true
+    secretName: concord-tls
+  ingress:
+    host: concord.yourdomain.com
+    annotations:
+      ingress.kubernetes.io/ssl-redirect: "true"
+      ingress.kubernetes.io/proxy-body-size: "0"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+  nodePort:
+    ports:
+      http:
+        port: 8080
+  loadBalancer:
+    IP: ""
+    ports:
+      httpPort: 8080
+      httpsPort: 8443
+    annotations: {}
+    sourceRanges: []
+
+# --------------------------------------------------------------------------------------------------------------------
+# Database/Postgres
+# --------------------------------------------------------------------------------------------------------------------
+
+database:
+  storageClass:
+  type: internal
+  internal:
+    server: "postgresql"
+    port: "5432"
+    user: "postgres"
+    password: "q1q1q1q1"
+    database: "postgres"
+    image:
+      repository: library/postgres
+      tag: 10.6
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+  external:
+    server: "192.168.0.1"
+    port: "5432"
+    user: "postgres"
+    password: "q1q1q1q1"
+    database: "postgres"
+  podAnnotations: {}
+
+# --------------------------------------------------------------------------------------------------------------------
+# LDAP
+# --------------------------------------------------------------------------------------------------------------------
+
+ldap:
+  enabled: false
+
+# --------------------------------------------------------------------------------------------------------------------
+# GitHub
+# --------------------------------------------------------------------------------------------------------------------
+
+github:
+  enabled: false
+  domain: github.com
+  secret: ""
+
+# --------------------------------------------------------------------------------------------------------------------
+# Agent
+# --------------------------------------------------------------------------------------------------------------------
+
+agent:
+  # This is when we use DinD
+  dockerHost: tcp://127.0.0.1:6666
+  hostNetwork: false
+  repositories:
+    - id: central
+      url: https://repo1.maven.org/maven2/
+  workers: 1
+  resources:
+    requests:
+      cpu: 1
+      memory: "1G"
+    limits:
+      cpu: 2
+      memory: "2G"
+
+# --------------------------------------------------------------------------------------------------------------------
+# DinD
+# --------------------------------------------------------------------------------------------------------------------
+# Probably makes more sense to hide most of this information
+
+dind:
+  image:
+    repository: library/docker
+    tag: stable-dind
+    command: ["dockerd"]
+    resources:
+      requests:
+        cpu: 1
+        memory: "2G"
+      limits:
+        cpu: 2
+        memory: "3G"
+    args: |
+      [ "-H tcp://0.0.0.0:6666" ]
+
+# --------------------------------------------------------------------------------------------------------------------
+# Concord Security
+# --------------------------------------------------------------------------------------------------------------------
+security:
+  clusterAdmin: true
+
+# --------------------------------------------------------------------------------------------------------------------
+# CCD
+# --------------------------------------------------------------------------------------------------------------------
+
+ccd:
+  storageClass:
+
+ccdMode: false
+devMode: false

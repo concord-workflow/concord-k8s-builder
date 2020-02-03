@@ -1,0 +1,17 @@
+flows:
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Autoscaler
+  # --------------------------------------------------------------------------------------------------------------------
+
+  autoscaler:
+    - task: helm
+      in:
+        command: upgrade
+        chart:
+          name: autoscaler
+          namespace: kube-system
+          value: "${k8sImport}/07-autoscaler/chart"
+          values: "${profile}/autoscaler/values.yaml"
+        envars: ${clusterRequest.envars}
+

@@ -1,0 +1,44 @@
+version: 1.37.2-SNAPSHOT
+registry: jvanzyl
+
+host: concord.starburstdata.org
+
+expose:
+  type: ingress
+  ingress:
+    host: concord.starburstdata.org
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+
+github:
+  enabled: true
+  domain: github.com
+  secret: 0683e010feb0ec5f386a55094bffec69
+
+agent:
+  dockerHost: tcp://127.0.0.1:6666
+  repositories:
+    - id: central
+      url: https://repo1.maven.org/maven2/
+    - id: jvz
+      url: https://oss.sonatype.org/content/repositories/snapshots
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 0.5
+    limits:
+      memory: 512Mi
+      cpu: 0.5
+
+dind:
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 0.5
+    limits:
+      memory: 512Mi
+      cpu: 0.5
+
+devMode: false
+ccdMode: true

@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}"
+  labels:
+    app: asg-pod
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: "{{ .Release.Name }}"
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    spec:
+    containers:
+    - name: asg-pod-container
+      image: banst/awscli
+      command: ['sh','-c' ,"aws configure set default.region {{ .Values.autotagger.clusterregion }}; results=$(aws autoscaling describe-auto-scaling-groups | jq -c '.AutoScalingGroups[]|  select(.AutoScalingGroupName |  contains (\"{{ .Values.autotagger.clustername }}\"))| .AutoScalingGroupName ') ;for resourceId in $results;do  aws autoscaling create-or-update-tags --tags ResourceId=$resourceId,ResourceType=auto-scaling-group,Key=k8s.io/cluster-autoscaler/enabled,Value=yes,PropagateAtLaunch=true ResourceId=$resourceId,ResourceType=auto-scaling-group,Key=k8s.io/cluster-autoscaler/{{ .Values.autotagger.clustername }},Value=yes,PropagateAtLaunch=true; done; date;"]

@@ -1,0 +1,80 @@
+{{- if eq .Values.database.type "external" -}}
+{{- end -}}
+{{- if eq .Values.database.type "internal" -}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-config
+  labels:
+    app: postgresql
+data:
+  POSTGRES_DB: {{ .Values.database.internal.database }}
+  POSTGRES_USER: {{ .Values.database.internal.user }}
+  POSTGRES_PASSWORD: {{ .Values.database.internal.password }}
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgresql-pvc
+  labels:
+    app: postgresql
+spec:
+{{- if .Values.database.storageClass }}
+{{- if (eq "-" .Values.database.storageClass) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: "{{ .Values.persistence.storageClass }}"
+{{- end }}
+{{- end }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      containers:
+        - name: postgresql
+          image: {{ .Values.database.internal.image.repository }}:{{ .Values.database.internal.image.tag }}
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: {{ .Values.database.internal.port }}
+          envFrom:
+            - configMapRef:
+                name: postgresql-config
+          volumeMounts:
+            - mountPath: /var/lib/postgresqlql/data
+              name: postgresql-volume
+      volumes:
+        - name: postgresql-volume
+          persistentVolumeClaim:
+            claimName: postgresql-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql
+  labels:
+    app: postgresql
+spec:
+  type: NodePort
+  ports:
+  - port: {{ .Values.database.internal.port }}
+    protocol: TCP
+  selector:
+    app: postgresql
+{{- end -}}

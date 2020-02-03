@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+
+function cmd() {
+  basename $0
+}
+
+function usage() {
+  echo "\
+`cmd` [OPTIONS...]
+-h, --help; Show help
+-y, --yaml; Use the specific Concord YAML file
+-f, --flow; Run the specified Concord flow (default: cluster)
+-s, --show; Show variables to be used for K8s cluster
+-d, --destroy; Destroy the K8s cluster
+-t, --test; Test mode: Only display the command that will be executed
+" | column -t -s ";"
+}
+
+options=$(getopt -o y:,f:,d: --long yaml:,file:,destroy: -n 'parse-options' -- "$@")
+
+if [ $? != 0 ]; then
+  echo "Failed parsing options." >&2
+  exit 1
+fi
+
+while true; do
+  case "$1" in
+    -h | --help) usage; exit;;
+    -y | --yaml) concordYml=$2; shift 2;;
+    -f | --flow) flow=$2; shift 2;;
+    -s | --show) action=show; shift 1;;
+    -d | --destroy) action=destroy; shift 1 ;;
+    -t | --test) testMode="true"; shift 1;;
+    -- ) shift; break ;;
+    "" ) break ;;
+    * ) echo "Unknown option provided ${1}"; usage; exit 1; ;;
+  esac
+done
+
+# Make sure a Concord YAML file was specified
+[ -z $concordYml ] && echo && echo "You must specify a Concord yaml file with the -y/--yaml option." && echo && exit
+# Make sure the specified Concord YAML file exists
+[ ! -f $concordYml ] && echo && echo "The specified Concord yaml file $concordYml doesn't exist." && echo && exit
+
+# Pull in the standard Concord profile
+source $HOME/.concord/concord.bash
+
+if [ "$action" == "show" ]; then
+  flow="show-variables"
+elif [ "$action" == "destroy" ]; then
+  flow="destroy"
+fi
+
+# By default we want to run the cluster flow
+entryPoint="-F cluster"
+
+# This allows us to start with any arbitrary Concord flow
+[ ! -z "$flow" ] && entryPoint="-F entryPoint=normalFlow -F arguments.flow=$flow"
+
+# By convention the Concord project name will be the same as the name of this
+# example, which is also the name of the directory:
+projectName="concord-k8s-builder"
+
+rm -rf target && mkdir target
+cp $concordYml target/concord.yml
+cp -R k8s-import target/k8s-import
+cp -R forms  target/
+cp -R k8s-profiles  target/
+
+# Copy all our standard imports into the payload
+mkdir target/concord
+for yml in `ls k8s-import/concord-k8s-*.yml`
+do
+  cp $yml target/concord
+done
+
+cd target && zip -x terraform/.terraform/**\* -r payload.zip ./* > /dev/null && cd ..
+
+if [ "$testMode" == "true" ]; then
+  echo curl -L -i -H "Authorization: ${CONCORD_API_TOKEN}" \
+   -F archive=@target/payload.zip \
+   -F org=${CONCORD_ORGANIZATION} \
+   -F project=${projectName} \
+   ${entryPoint} \
+   http://${CONCORD_HOST_PORT}/api/v1/process
+else
+  curl -L -i -H "Authorization: ${CONCORD_API_TOKEN}" \
+   -F archive=@target/payload.zip \
+   -F org=${CONCORD_ORGANIZATION} \
+   -F project=${projectName} \
+   ${entryPoint} \
+   http://${CONCORD_HOST_PORT}/api/v1/process
+fi

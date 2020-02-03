@@ -1,0 +1,31 @@
+flows:
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Helm 2.x
+  # --------------------------------------------------------------------------------------------------------------------
+
+  helm-install:
+    - task: kubectl
+      in:
+        command: apply
+        file: "${k8sImport}/00-helm/tiller-rbac.yml"
+        envars: ${clusterRequest.envars}
+
+    - task: helm
+      in:
+        command: init
+        serviceAccount: tiller
+        wait: true
+        envars: ${clusterRequest.envars}
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Everything below here are standard extensions that can be separated out in their own flow files
+  # --------------------------------------------------------------------------------------------------------------------
+
+  repo-update:
+    - task: helm
+      in:
+        command: repo
+        update:
+          name : ""
+

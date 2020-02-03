@@ -1,0 +1,15 @@
+flows:
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # Metacontroller
+  # --------------------------------------------------------------------------------------------------------------------
+
+  metacontroller:
+    - task: helm
+      in:
+        command: upgrade
+        chart:
+          name: metacontroller
+          namespace: metacontroller
+          value: "${k8sImport}/02-metacontroller/chart"
+        envars: ${clusterRequest.envars}

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# ------------------------------------------------------------------------------
+# Create the necessary project in Concord to build K8s clusters
+# ------------------------------------------------------------------------------
+
+source $HOME/.concord/concord.bash
+concord_project "concord-k8s-builder"

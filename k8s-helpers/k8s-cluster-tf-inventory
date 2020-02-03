@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# ------------------------------------------------------------------------------
+# # Retrieves the Terraform inventory for a given clusterId
+# ------------------------------------------------------------------------------
+
+source $HOME/.concord/concord.bash
+[ -z "$1" ] && echo && echo "You must provide the clusterId from your clusterRequest." && echo && exit
+concord_terraform_inventory "$1" | jq

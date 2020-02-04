@@ -10,6 +10,6 @@ flows:
         command: upgrade
         chart:
           name: horizontal-dns-autoscaler
-          value: "${k8sImport}/04-dns-autoscaler/chart"
+          value: "${k8sImport}/04-horizontal-dns-autoscaler/chart"
           values: "${profile}/horizontal-dns-autoscaler/values.yaml"
         envars: ${clusterRequest.envars}

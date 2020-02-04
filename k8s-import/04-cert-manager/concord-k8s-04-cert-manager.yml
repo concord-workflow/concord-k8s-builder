@@ -44,7 +44,7 @@ flows:
     - switch: ${clusterRequest.environment}
       production:
         - "${k8sContext.ingressAnnotation(context, 'cert-manager.io/cluster-issuer: letsencrypt-prod')}"
-        - "${k8sContext.postManifest(context, '06-cert-manager/cluster-issuer-letencrypt-prod.yml')}"
+        - "${k8sContext.postManifest(context, '04-cert-manager/cluster-issuer-letencrypt-prod.yml')}"
       default:
         - "${k8sContext.ingressAnnotation(context, 'cert-manager.io/cluster-issuer: letsencrypt-staging')}"
-        - "${k8sContext.postManifest(context, '06-cert-manager/cluster-issuer-letencrypt-staging.yml')}"
+        - "${k8sContext.postManifest(context, '04-cert-manager/cluster-issuer-letencrypt-staging.yml')}"

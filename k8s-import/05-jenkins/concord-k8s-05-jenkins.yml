@@ -1,10 +1,11 @@
-flows:
+# ------------------------------------------------------------------------------
+# Jenkins
+# ------------------------------------------------------------------------------
+# NOTES:
+# - https://stackoverflow.com/questions/53590226/cant-download-plugins-using-kubernetes-jenkins-problem-with-kube-dns
+# ------------------------------------------------------------------------------
 
-  # --------------------------------------------------------------------------------------------------------------------
-  # Jenkins
-  # --------------------------------------------------------------------------------------------------------------------
-  # NOTES:
-  # - https://stackoverflow.com/questions/53590226/cant-download-plugins-using-kubernetes-jenkins-problem-with-kube-dns
+flows:
 
   jenkins:
     - task: helm
@@ -17,4 +18,3 @@ flows:
           value: stable/jenkins
           values: "${profile}/jenkins/values.yaml"
         envars: ${clusterRequest.envars}
-

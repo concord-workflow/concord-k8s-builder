@@ -1,8 +1,8 @@
-flows:
+# ------------------------------------------------------------------------------
+# Prometheus
+# ------------------------------------------------------------------------------
 
-  # --------------------------------------------------------------------------------------------------------------------
-  # Prometheus
-  # --------------------------------------------------------------------------------------------------------------------
+flows:
 
   prometheus:
 
@@ -21,4 +21,5 @@ flows:
     # Prometheus is enabled. Any of chart being installed can look for
     # this feature being set to determine is P8s service monitors
     # should be installed.
+    
     - ${k8sContext.enableFeature('prometheus')}

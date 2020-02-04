@@ -1,12 +1,14 @@
-flows:
+# ------------------------------------------------------------------------------
+# Metrics Server
+# ------------------------------------------------------------------------------
+# In order to use standard horizontal pod autoscaling
+# (https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
+# the metrics-server needs to be deployed in the cluster to provide metrics via
+# the resource metrics API, as Horizontal Pod Autoscaler uses this API
+# to collect metrics.
+# ------------------------------------------------------------------------------
 
-  # --------------------------------------------------------------------------------------------------------------------
-  # Metrics Server
-  # --------------------------------------------------------------------------------------------------------------------
-  # In order to use standard horizontal pod autoscaling (https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
-  # the metrics-server needs to be deployed in the cluster to provide metrics via the resource metrics API, as
-  # Horizontal Pod Autoscaler uses this API to collect metrics.
-  # --------------------------------------------------------------------------------------------------------------------
+flows:
 
   metrics-server:
     - task: helm

@@ -1,19 +1,16 @@
 flows:
 
   # --------------------------------------------------------------------------------------------------------------------
-  # S3Proxy
+  # Concord
   # --------------------------------------------------------------------------------------------------------------------
-  # NOTES:
-  # - https://stackoverflow.com/questions/53590226/cant-download-plugins-using-kubernetes-jenkins-problem-with-kube-dns
 
-  s3proxy:
+  concord:
     - task: helm
       in:
         command: upgrade
         chart:
-          name: s3proxy
-          namespace: s3proxy
-          value: "${k8sImport}/20-s3proxy/chart"
-          values: "${profile}/s3proxy/values.yaml"
+          name: concord
+          namespace: concord
+          value: "${k8sImport}/05-concord/chart"
+          values: "${profile}/concord/values.yaml"
         envars: ${clusterRequest.envars}
-

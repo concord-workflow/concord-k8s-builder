@@ -8,7 +8,7 @@ flows:
     - task: kubectl
       in:
         command: apply
-        file: "${k8sImport}/00-helm/tiller-rbac.yml"
+        file: "${k8sImport}/03-helm/tiller-rbac.yml"
         envars: ${clusterRequest.envars}
 
     - task: helm
@@ -28,4 +28,3 @@ flows:
         command: repo
         update:
           name : ""
-

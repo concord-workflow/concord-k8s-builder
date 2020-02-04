@@ -1,18 +1,18 @@
 flows:
 
   # --------------------------------------------------------------------------------------------------------------------
-  # NGINX Ingress
+  # S3Proxy
   # --------------------------------------------------------------------------------------------------------------------
+  # NOTES:
+  # - https://stackoverflow.com/questions/53590226/cant-download-plugins-using-kubernetes-jenkins-problem-with-kube-dns
 
-  ingress-nginx:
+  s3proxy:
     - task: helm
       in:
         command: upgrade
         chart:
-          name: ingress-nginx
-          value: "${k8sImport}/01-ingress-nginx/chart"
-          values: "${profile}/ingress-nginx/values.yaml"
+          name: s3proxy
+          namespace: s3proxy
+          value: "${k8sImport}/05-s3proxy/chart"
+          values: "${profile}/s3proxy/values.yaml"
         envars: ${clusterRequest.envars}
-
-    - "${k8sContext.ingressAnnotation(context, 'kubernetes.io/ingress.class: nginx')}"
-

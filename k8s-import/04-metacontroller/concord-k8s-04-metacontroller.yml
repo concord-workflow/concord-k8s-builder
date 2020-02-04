@@ -1,16 +1,15 @@
 flows:
 
   # --------------------------------------------------------------------------------------------------------------------
-  # Horizontal DNS Autoscaler
+  # Metacontroller
   # --------------------------------------------------------------------------------------------------------------------
 
-  horizontal-dns-autoscaler:
+  metacontroller:
     - task: helm
       in:
         command: upgrade
         chart:
-          name: horizontal-dns-autoscaler
-          value: "${k8sImport}/09-dns-autoscaler/chart"
-          values: "${profile}/horizontal-dns-autoscaler/values.yaml"
+          name: metacontroller
+          namespace: metacontroller
+          value: "${k8sImport}/04-metacontroller/chart"
         envars: ${clusterRequest.envars}
-

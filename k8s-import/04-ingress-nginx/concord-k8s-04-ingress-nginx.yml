@@ -1,17 +1,17 @@
 flows:
 
   # --------------------------------------------------------------------------------------------------------------------
-  # Concord
+  # NGINX Ingress
   # --------------------------------------------------------------------------------------------------------------------
 
-  concord:
+  ingress-nginx:
     - task: helm
       in:
         command: upgrade
         chart:
-          name: concord
-          namespace: concord
-          value: "${k8sImport}/12-concord/chart"
-          values: "${profile}/concord/values.yaml"
+          name: ingress-nginx
+          value: "${k8sImport}/04-ingress-nginx/chart"
+          values: "${profile}/ingress-nginx/values.yaml"
         envars: ${clusterRequest.envars}
 
+    - "${k8sContext.ingressAnnotation(context, 'kubernetes.io/ingress.class: nginx')}"

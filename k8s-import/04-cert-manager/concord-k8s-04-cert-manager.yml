@@ -10,7 +10,7 @@ flows:
       in:
         command: apply
         validate: false
-        file: "${k8sImport}/06-cert-manager/00-crds.yaml"
+        file: "${k8sImport}/04-cert-manager/00-crds.yaml"
         envars: ${clusterRequest.envars}
 
     # Create the namespace for cert-manager
@@ -48,4 +48,3 @@ flows:
       default:
         - "${k8sContext.ingressAnnotation(context, 'cert-manager.io/cluster-issuer: letsencrypt-staging')}"
         - "${k8sContext.postManifest(context, '06-cert-manager/cluster-issuer-letencrypt-staging.yml')}"
-

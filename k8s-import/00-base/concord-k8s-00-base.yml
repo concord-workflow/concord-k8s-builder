@@ -42,25 +42,21 @@ flows:
           PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/concord/bin"
 
   show-variables:
-    - log: "                   profile: ${clusterRequest.profile}"
-    - log: "                   account: ${clusterRequest.account}"
-    - log: "                      user: ${clusterRequest.user}"
-    - log: "                    region: ${clusterRequest.region}"
-    - log: "               environment: ${clusterRequest.environment}"
-    - log: "               clusterName: ${clusterRequest.clusterName}"
-    - log: "                 clusterId: ${clusterRequest.clusterId}"
-    - log: "                  provider: ${clusterRequest.provider}"
-    - log: "                builder.id: ${clusterRequest.builder.id}"
-    - log: "            kubeconfigName: ${clusterRequest.kubeconfigName}"
-    - log: "            kubeconfigFile: ${clusterRequest.kubeconfigFile}"
-    - log: "                    envars: ${clusterRequest.envars}"
-    - log: "             aws.accessKey: XXX"
-    - log: "             aws.secretKey: XXX"
-    - log: "            aws.homeRegion: ${clusterRequest.aws.homeRegion}"
-    - log: "          aws.backupRegion: ${clusterRequest.aws.backupRegion}"
-    - log: "                  aws.tags: ${clusterRequest.aws.tags}"
-    - log: "                  vpc_name: ${clusterRequest.terraformResources[0].variables.vpc_name}"
-    - log: "        terraformDirectory: ${terraformDirectory}"
+    - log: "profile: ${clusterRequest.profile}"
+    - log: "account: ${clusterRequest.account}"
+    - log: "user: ${clusterRequest.user}"
+    - log: "region: ${clusterRequest.region}"
+    - log: "environment: ${clusterRequest.environment}"
+    - log: "clusterName: ${clusterRequest.clusterName}"
+    - log: "clusterId: ${clusterRequest.clusterId}"
+    - log: "provider: ${clusterRequest.provider}"
+    - log: "builder.id: ${clusterRequest.builder.id}"
+    - log: "kubeconfigName: ${clusterRequest.kubeconfigName}"
+    - log: "kubeconfigFile: ${clusterRequest.kubeconfigFile}"
+    - log: "envars: ${clusterRequest.envars}"
+    - log: "aws.homeRegion: ${clusterRequest.aws.homeRegion}"
+    - log: "aws.backupRegion: ${clusterRequest.aws.backupRegion}"
+    - log: "aws.tags: ${clusterRequest.aws.tags}"
 
   # --------------------------------------------------------------------------------------------------------------------
   # Cluster Request Validation
@@ -181,7 +177,7 @@ flows:
   # like a fully-populated clusterRequest and secrets being present
   prereqs:
 
-    #- task: k8sValidate
+    - task: k8sValidate
 
     - if: ${!context.hasVariable('augment')}
       then:
@@ -220,49 +216,10 @@ flows:
   destroy:
 
     - show-variables
-    - terraformProcessor
 
-    - task: terraform
-      in:
-        toolVersion: "${terraformVersion}"
-        debug: ${terraformDebug}
-        action: plan
-        destroy: true
-        dir: "${terraformDirectory}"
-        stateId: ${clusterRequest.clusterId}
-        varFiles:
-          - "${workDir}/${terraformDirectory}/00.auto.tfvars.json"
-
-    - if: ${!result.hasChanges}
+    - if: ${clusterRequest.provider.equals('aws')}
       then:
-        - log: "No changes planned, stopping..."
-        - exit
-
-    - form: approvalForm
-      fields:
-        - plan: { type: "string", readonly: true, value: "${result.output}" }
-        - approved: { type: "boolean" }
-      values:
-        processId: "${txId}"
-      yield: true
-
-    - if: ${!approvalForm.approved}
-      then:
-        - throw: "The plan to destroy was not approved"
-
-    - eksctlDestroy
-
-    - task: terraform
-      in:
-        toolVersion: "${terraformVersion}"
-        debug: ${terraformDebug}
-        verbose: ${terraformDebug}
-        action: apply
-        plan: ${result.planPath}
-        stateId: ${clusterRequest.clusterId}
-      retry:
-        times: 3
-        delay: 30
+        - awsClusterDestroy
 
   # --------------------------------------------------------------------------------------------------------------------
   # Test flows

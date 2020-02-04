@@ -84,20 +84,70 @@ flows:
 
     - awsIamAuthenticator
 
-    - task: eksctl
-      in:
-        command: create
-        version: "${clusterRequest.builder.version}"
-        cluster:
-          configFile: "${clusterRequest.clusterId}-eksctl.yaml"
-          kubeconfig: "${clusterRequest.kubeconfigFile}"
-        envars: ${clusterRequest.envars}
+    - try:
+      - task: eksctl
+        in:
+          command: create
+          version: "${clusterRequest.builder.version}"
+          cluster:
+            configFile: "${clusterRequest.clusterId}-eksctl.yaml"
+            kubeconfig: "${clusterRequest.kubeconfigFile}"
+          envars: ${clusterRequest.envars}
+      error:
+        - log: ${lastError}
+        - throw: ${lastError}
 
     # Write the kubeconfig into Concord's secret store and to the agent
     - concordKubeconfig
 
     # Take the kubeconfig from Concord's secret store and write it into AWS Secrets Manager
     - asmKubeconfig
+
+  awsClusterDestroy:
+
+    - awsTerraformProcessor
+
+    - task: terraform
+      in:
+        toolVersion: "${terraformVersion}"
+        debug: ${terraformDebug}
+        action: plan
+        destroy: true
+        dir: "${terraformDirectory}"
+        stateId: ${clusterRequest.clusterId}
+        varFiles:
+          - "${workDir}/${terraformDirectory}/00.auto.tfvars.json"
+
+    - if: ${!result.hasChanges}
+      then:
+        - log: "No changes planned, stopping..."
+        - exit
+
+    - form: approvalForm
+      fields:
+        - plan: { type: "string", readonly: true, value: "${result.output}" }
+        - approved: { type: "boolean" }
+      values:
+        processId: "${txId}"
+      yield: true
+
+    - if: ${!approvalForm.approved}
+      then:
+        - throw: "The plan to destroy was not approved"
+
+    - eksctlDestroy
+
+    - task: terraform
+      in:
+        toolVersion: "${terraformVersion}"
+        debug: ${terraformDebug}
+        verbose: ${terraformDebug}
+        action: apply
+        plan: ${result.planPath}
+        stateId: ${clusterRequest.clusterId}
+      retry:
+        times: 3
+        delay: 30
 
   eksctlDestroy:
     - task: eksctl
@@ -111,7 +161,7 @@ flows:
         envars: ${clusterRequest.envars}
       retry:
         times: 3
-        delay: 30
+        delay: 10
 
   # --------------------------------------------------------------------------------------------------------------------
   # Secrets

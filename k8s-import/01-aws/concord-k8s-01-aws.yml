@@ -13,7 +13,7 @@ configuration:
 
 flows:
 
-  cluster-aws:
+  awsCluster:
     - if: ${clusterRequest.builder.id.equals('eksctl')}
       then:
         - log: "We are building a cluster on ${clusterRequest.provider} using ${clusterRequest.builder.id} ..."

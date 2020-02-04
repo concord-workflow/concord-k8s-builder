@@ -79,7 +79,7 @@ flows:
   cluster:
     - if: ${clusterRequest.provider.equals('aws')}
       then:
-        - cluster-aws
+        - awsCluster
 
   concordKubeconfig:
     - task: concordKubeconfig

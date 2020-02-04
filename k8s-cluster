@@ -67,6 +67,9 @@ else
   prefix=""
 fi
 
+# Create the project for building clusters if it doesn't exit
+./${prefix}/k8s-helpers/k8s-setup
+
 rm -rf target && mkdir target
 cp $concordYml target/concord.yml
 cp -R ${prefix}k8s-import target/k8s-import

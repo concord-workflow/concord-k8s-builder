@@ -18,7 +18,13 @@ flows:
       then:
         - log: "We are building a cluster on ${clusterRequest.provider} using ${clusterRequest.builder.id} ..."
         - awsTerraform
-        - eksctl
+        - eksctlYml
+        - eksctlExecution
+        # Write the kubeconfig into Concord's secret store and to the agent
+        - concordKubeconfig
+        # Take the kubeconfig from Concord's secret store and write it into AWS Secrets Manager
+        - asmKubeconfig
+        - awsIamAuthenticator
 
   # --------------------------------------------------------------------------------------------------------------------
   # Terraform
@@ -75,14 +81,18 @@ flows:
   # --------------------------------------------------------------------------------------------------------------------
   # TODO: integrate eksctl cluster yaml in the task itself
 
-  eksctl:
+  eksctlYml:
     - task: eksctlYml
       in:
         clusterRequest: "${clusterRequest}"
         vpcTerraformOutput: "${result.data}"
         configFile: "${clusterRequest.clusterId}-eksctl.yaml"
 
-    - awsIamAuthenticator
+  eksctlExecution:
+    - log: "clusterRequest.builder.version: ${clusterRequest.builder.version}"
+    - log: "kubeconfig: ${clusterRequest.kubeconfigFile}"
+    - log: "configFile: ${clusterRequest.clusterId}-eksctl.yaml"
+    - log: "envars: ${clusterRequest.envars}"
 
     - try:
       - task: eksctl
@@ -94,14 +104,8 @@ flows:
             kubeconfig: "${clusterRequest.kubeconfigFile}"
           envars: ${clusterRequest.envars}
       error:
-        - log: ${lastError}
+        - log: ${lastError.cause.message}
         - throw: ${lastError}
-
-    # Write the kubeconfig into Concord's secret store and to the agent
-    - concordKubeconfig
-
-    # Take the kubeconfig from Concord's secret store and write it into AWS Secrets Manager
-    - asmKubeconfig
 
   awsClusterDestroy:
 

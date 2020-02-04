@@ -1,0 +1,16 @@
+# ------------------------------------------------------------------------------
+# AWS CSI Driver
+# ------------------------------------------------------------------------------
+flows:
+
+  aws-ebs-csi-driver:
+    - task: helm
+      in:
+        command: upgrade
+        chart:
+          name: aws-ebs-csi-driver
+          namespace: kube-system
+          version: v0.11.0
+          value: https://github.com/kubernetes-sigs/aws-ebs-csi-driver/releases/download/v0.4.0/helm-chart.tgz
+          values: "${profile}/aws-ebs-csi-driver/values.yaml"
+        envars: ${clusterRequest.envars}

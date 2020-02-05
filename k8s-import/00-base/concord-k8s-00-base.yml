@@ -29,6 +29,7 @@ flows:
   #validate-flow-names:
 
   # Add some information to the cluster request that we don't want the user to change
+  # TODO: add cloud-specific augmentation i.e. we want to remove AWS specifics there
   augment:
     - set:
         # This can't be put here yet as we don't lazily resolve variables

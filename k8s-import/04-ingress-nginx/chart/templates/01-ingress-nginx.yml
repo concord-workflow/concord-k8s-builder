@@ -7,7 +7,6 @@ metadata:
     app.kubernetes.io/part-of: ingress-nginx
 
 ---
-
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -18,6 +17,8 @@ metadata:
     app.kubernetes.io/part-of: ingress-nginx
 data:
   proxy-body-size: "{{ .Values.config.proxyBodySize }}"
+  use-forwarded-headers: "{{ .Values.config.useForwardedHeaders | default false }}"
+
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -253,7 +254,7 @@ spec:
               protocol: TCP
             - name: metrics
               containerPort: 10254
-              protocol: TCP            
+              protocol: TCP
           livenessProbe:
             failureThreshold: 3
             httpGet:

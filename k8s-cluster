@@ -85,6 +85,9 @@ done
 
 cd target && zip -x terraform/.terraform/**\* -r payload.zip ./* > /dev/null && cd ..
 
+#Synch HyperV TimeService 
+concord_docker_win_ts
+
 if [ "$testMode" == "true" ]; then
   echo curl -L -i -H \"Authorization: ${CONCORD_API_TOKEN}\" \
    -F "archive=@target/payload.zip" \

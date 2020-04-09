@@ -1,6 +1,6 @@
 <runtime>
     <!-- Target -->
-    <archive name="${project.artifactId}-${project.version}.zip"/>
+    <archive useRoot="false" name="${project.artifactId}-${project.version}.zip"/>
 
     <!-- Notices -->
     <fileSet to="concord">

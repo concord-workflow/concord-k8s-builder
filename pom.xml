@@ -9,14 +9,14 @@
     <artifactId>concord-k8s-builder</artifactId>
     <groupId>ca.vanzyl.concord.plugins</groupId>
     <version>0.0.2-SNAPSHOT</version>
-    <packaging>provisio</packaging>
+    <packaging>provisio-zip</packaging>
 
     <build>
       <plugins>
         <plugin>
           <groupId>ca.vanzyl.provisio.maven.plugins</groupId>
           <artifactId>provisio-maven-plugin</artifactId>
-          <version>1.0.10</version>
+          <version>1.0.11</version>
           <extensions>true</extensions>
         </plugin>
       </plugins>

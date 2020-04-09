@@ -38,16 +38,14 @@ flows:
 
   awsTerraformProcessor:
 
-    - try:
-      - task: git
-        in:
-          action: clone
-          url: "https://github.com/jvanzyl/concord-terraform.git"
-          baseBranch: "${terraformResourcesTag}"
-          workingDir: "${terraformResources}"
-      error:
-        - ${k8sFileUtils.deleteDirectory(terraformResources)}
-        - throw: ${lastError}
+    - ${k8sFileUtils.deleteDirectory(terraformResources)}
+
+    - task: git
+      in:
+        action: clone
+        url: "https://github.com/concord-workflow/concord-terraform.git"
+        baseBranch: "${terraformResourcesTag}"
+        workingDir: "${terraformResources}"
 
     - task: terraformProcessor
       in:

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+      <artifactId>takari</artifactId>
+      <groupId>io.takari</groupId>
+      <version>27</version>
+    </parent>
+    <artifactId>concord-k8s-builder</artifactId>
+    <groupId>ca.vanzyl.concord.plugins</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>provisio</packaging>
+
+    <build>
+      <plugins>
+        <plugin>
+          <groupId>ca.vanzyl.provisio.maven.plugins</groupId>
+          <artifactId>provisio-maven-plugin</artifactId>
+          <version>1.0.10-SNAPSHOT</version>
+          <extensions>true</extensions>
+        </plugin>
+      </plugins>
+    </build>
+</project>

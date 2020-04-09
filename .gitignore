@@ -17,5 +17,5 @@
 **/bin/tiller
 
 # Maven/Java
-pom.xml
+.idea/
 *.iml

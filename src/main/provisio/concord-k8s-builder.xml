@@ -1,0 +1,22 @@
+<runtime>
+    <!-- Target -->
+    <archive name="${project.artifactId}-${project.version}.zip"/>
+
+    <!-- Notices -->
+    <fileSet to="concord">
+      <directory path="${basedir}/k8s-import" flatten="true">
+        <include>**/concord-k8s-*</include>
+      </directory>
+    </fileSet>
+
+    <fileSet to="forms">
+      <directory path="${basedir}/forms"/>
+    </fileSet>
+
+    <fileSet to="k8s-import">
+      <directory path="${basedir}/k8s-import">
+        <exclude>**/concord-k8s-*</exclude>
+      </directory>
+    </fileSet>
+
+</runtime>

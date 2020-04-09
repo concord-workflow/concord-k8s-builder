@@ -5,7 +5,7 @@ configuration:
       recordTaskInVars: true
 
   dependencies:
-    - "mvn://ca.vanzyl.concord.plugins:concord-k8s-plugin:0.0.12"
+    - "mvn://ca.vanzyl.concord.plugins:concord-k8s-plugin:0.9.1"
     - "mvn://com.walmartlabs.concord.plugins:git:1.22.0"
     - "mvn://com.walmartlabs.concord.plugins:terraform-task:1.22.0"
 

@@ -8,7 +8,7 @@
     </parent>
     <artifactId>concord-k8s-builder</artifactId>
     <groupId>ca.vanzyl.concord.plugins</groupId>
-    <version>0.0.5</version>
+    <version>0.0.6-SNAPSHOT</version>
     <packaging>provisio-zip</packaging>
 
     <build>
@@ -21,8 +21,4 @@
         </plugin>
       </plugins>
     </build>
-
-  <scm>
-    <tag>concord-k8s-builder-0.0.5</tag>
-  </scm>
 </project>

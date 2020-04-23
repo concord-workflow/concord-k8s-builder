@@ -5,6 +5,7 @@
 configuration:
 
   arguments:
+    terraformDevMode: false
     terraformDebug: false
     terraformVersion: 0.12.18
     terraformDirectory: "terraform"
@@ -40,12 +41,18 @@ flows:
 
     - ${k8sFileUtils.deleteDirectory(terraformResources)}
 
-    - task: git
-      in:
-        action: clone
-        url: "https://github.com/concord-workflow/concord-terraform.git"
-        baseBranch: "${terraformResourcesTag}"
-        workingDir: "${terraformResources}"
+    # By default we operate in production mode where we pull these resources from
+    # a remote location, but in dev mode we might be working on this body of
+    # Terraform and we want to be able to try it out locally without having to
+    # commit the changes or release the project.
+    - if: ${!terraformDevMode}
+      then:
+        - task: git
+          in:
+            action: clone
+            url: "https://github.com/concord-workflow/concord-terraform.git"
+            baseBranch: "${terraformResourcesTag}"
+            workingDir: "${terraformResources}"
 
     - task: terraformProcessor
       in:

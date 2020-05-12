@@ -2,16 +2,6 @@
 # AWS
 # --------------------------------------------------------------------------------------------------------------------
 
-configuration:
-
-  arguments:
-    terraformDevMode: false
-    terraformDebug: false
-    terraformVersion: 0.12.18
-    terraformDirectory: "terraform"
-    terraformResources: "terraform-resources"
-    terraformResourcesTag: "1.0.0"
-
 flows:
 
   awsCluster:
@@ -30,30 +20,12 @@ flows:
   # --------------------------------------------------------------------------------------------------------------------
   # Terraform
   # --------------------------------------------------------------------------------------------------------------------
-  # TODO: the terraform processor is general purpose but the configuration below needs to be decoupled from AWS.
-  # --------------------------------------------------------------------------------------------------------------------
 
   awsTerraform:
     - awsTerraformProcessor
     - awsTerraformExecution
 
   awsTerraformProcessor:
-
-    - ${k8sFileUtils.deleteDirectory(terraformResources)}
-
-    # By default we operate in production mode where we pull these resources from
-    # a remote location, but in dev mode we might be working on this body of
-    # Terraform and we want to be able to try it out locally without having to
-    # commit the changes or release the project.
-    - if: ${!terraformDevMode}
-      then:
-        - task: git
-          in:
-            action: clone
-            url: "https://github.com/concord-workflow/concord-terraform.git"
-            baseBranch: "${terraformResourcesTag}"
-            workingDir: "${terraformResources}"
-
     - task: terraformProcessor
       in:
         resourceDirectory: "${terraformResources}"

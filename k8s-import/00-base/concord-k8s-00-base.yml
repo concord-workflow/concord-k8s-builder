@@ -5,7 +5,7 @@ configuration:
       recordTaskInVars: true
 
   dependencies:
-    - "mvn://ca.vanzyl.concord.plugins:concord-k8s-plugin:0.9.3"
+    - "mvn://ca.vanzyl.concord.plugins:concord-k8s-plugin:0.9.4"
     - "mvn://com.walmartlabs.concord.plugins:git:1.22.0"
 
   arguments:

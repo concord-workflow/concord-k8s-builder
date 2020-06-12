@@ -99,22 +99,24 @@ flows:
         varFiles:
           - "${workDir}/${terraformDirectory}/00.auto.tfvars.json"
 
-    - if: ${!result.hasChanges}
+    - if: ${!context.hasVariable('forceDestroy')}
       then:
-        - log: "No changes planned, stopping..."
-        - exit
+        - if: ${!result.hasChanges}
+          then:
+            - log: "No changes planned, stopping..."
+            - exit
 
-    - form: approvalForm
-      fields:
-        - plan: { type: "string", readonly: true, value: "${result.output}" }
-        - approved: { type: "boolean" }
-      values:
-        processId: "${txId}"
-      yield: true
+        - form: approvalForm
+          fields:
+            - plan: { type: "string", readonly: true, value: "${result.output}" }
+            - approved: { type: "boolean" }
+          values:
+            processId: "${txId}"
+          yield: true
 
-    - if: ${!approvalForm.approved}
-      then:
-        - throw: "The plan to destroy was not approved"
+        - if: ${!approvalForm.approved}
+          then:
+            - throw: "The plan to destroy was not approved"
 
     - eksctlDestroy
 

@@ -20,6 +20,10 @@ configuration:
     k8sImport: "${workDir}/k8s-import"
     terraformImport: "${workDir}/k8s-import"
     profile: "${workDir}/concord-k8s-profiles/${clusterRequest.profile}"
+    # --------------------------------------------------------------------------------------------------------------------
+    # Helm
+    # --------------------------------------------------------------------------------------------------------------------
+    helmVersion: "3.x"
 
 flows:
 
@@ -65,6 +69,9 @@ flows:
     - if: ${clusterRequest.provider.equals('aws')}
       then:
         - awsCluster
+    - if: ${helmVersion.equals('2.x')}
+      then:
+        - helm-install
 
   concordKubeconfig:
     - task: concordKubeconfig

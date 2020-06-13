@@ -1,13 +1,16 @@
 # --------------------------------------------------------------------------------------------------------------------
 # AWS
 # --------------------------------------------------------------------------------------------------------------------
+configuration:
+  arguments:
+    standardAwsK8sClusterExtensions:
+      - aws-ebs-csi-driver
 
 flows:
 
-  awsCluster:
+  awsK8sClusterProvisioning:
     - if: ${clusterRequest.builder.id.equals('eksctl')}
       then:
-        - log: "We are building a cluster on ${clusterRequest.provider} using ${clusterRequest.builder.id} ..."
         - awsTerraform
         - eksctlYml
         - eksctlExecution
@@ -16,6 +19,25 @@ flows:
         # Take the kubeconfig from Concord's secret store and write it into AWS Secrets Manager
         - asmKubeconfig
         - awsIamAuthenticator
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # AWS K8s Secrets Provisioning
+  # --------------------------------------------------------------------------------------------------------------------
+  awsK8sSecretsProvisioning:
+    - asmSecrets
+    - asmKubeconfigGet
+    - awsIamAuthenticator
+
+  # --------------------------------------------------------------------------------------------------------------------
+  # AWS K8s Cluster Extensions Provisioning
+  #
+  # These are extensions that are typically added to an EKS cluster running in AWS.
+  # --------------------------------------------------------------------------------------------------------------------
+  awsK8sClusterExtensionsProvisioning:
+    - call: resilientFlow
+      in:
+        flow: ${item}
+      withItems: ${standardAwsK8sClusterExtensions}
 
   # --------------------------------------------------------------------------------------------------------------------
   # Terraform

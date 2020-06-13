@@ -5,10 +5,19 @@ configuration:
       recordTaskInVars: true
 
   dependencies:
-    - "mvn://ca.vanzyl.concord.plugins:concord-k8s-plugin:0.9.4"
+    - "mvn://ca.vanzyl.concord.plugins:concord-k8s-plugin:0.9.5-SNAPSHOT"
     - "mvn://com.walmartlabs.concord.plugins:git:1.22.0"
 
   arguments:
+    # --------------------------------------------------------------------------------------------------------------------
+    # Bootstrap
+    # --------------------------------------------------------------------------------------------------------------------
+    standardK8sClusterExtensions:
+      - ingress-nginx
+      - external-dns
+      - autoscaler
+      - metrics-server
+      - cert-manager
     # --------------------------------------------------------------------------------------------------------------------
     # Bootstrap
     # --------------------------------------------------------------------------------------------------------------------
@@ -58,20 +67,50 @@ flows:
   # --------------------------------------------------------------------------------------------------------------------
 
   # --------------------------------------------------------------------------------------------------------------------
-  # Build Cluster
+  # K8s Cluster Provisioning
   # --------------------------------------------------------------------------------------------------------------------
-  # TODO: support EksCtl without the use of a template
-  # TODO: support GCE
   # TODO: support Azure
   # --------------------------------------------------------------------------------------------------------------------
 
-  cluster:
+  k8sClusterProvisioning:
+    - log: "We are building a cluster on ${clusterRequest.provider} using ${clusterRequest.builder.id} ..."
+
     - if: ${clusterRequest.provider.equals('aws')}
       then:
-        - awsCluster
+        - call: resilientFlow
+          in:
+            flow: ${item}
+          withItems:
+            - awsK8sClusterProvisioning
+
     - if: ${helmVersion.equals('2.x')}
       then:
-        - helm-install
+        - call: resilientFlow
+          in:
+            flow: ${item}
+          withItems:
+            - helm-install
+
+    - if: ${clusterRequest.provider.equals('aws')}
+      then:
+        - awsK8sClusterExtensionsProvisioning
+
+    - call: resilientFlow
+      in:
+        flow: ${item}
+      withItems: ${standardK8sClusterExtensions}
+
+    - call: resilientFlow
+      in:
+        flow: ${item}
+      withItems:
+        - postManifests
+
+  k8sClusterApplicationProvisioning:
+    - call: resilientFlow
+      in:
+        flow: ${item}
+      withItems: ${k8sClusterApplications}
 
   concordKubeconfig:
     - task: concordKubeconfig
@@ -168,7 +207,7 @@ flows:
   # Primary used when calling individual flows to make sure the basic requirements are present in the context
   # like a fully-populated clusterRequest and secrets being present
   prereqs:
-
+    # This is causing a CCE, something is putting List called "secrets" into the context
     - task: k8sValidate
 
     - if: ${!context.hasVariable('augment')}
@@ -184,10 +223,7 @@ flows:
       then:
         - if: ${clusterRequest.provider.equals('aws')}
           then:
-            - log: "Using AWS secrets processing..."
-            - asmSecrets
-            - asmKubeconfigGet
-            - awsIamAuthenticator
+            - awsK8sSecretsProvisioning
 
         - if: ${clusterRequest.provider.equals('gcp')}
           then:
@@ -203,8 +239,6 @@ flows:
   # Destroy
   # --------------------------------------------------------------------------------------------------------------------
 
-  # TODO: The EKSCTL destroy is mixed up in here, but we need to account for not using Terraform with EKSCTL at all
-  # TODO: tag kubeconfig as deleted, keep it just in case but allow filtering it out
   destroy:
 
     - show-variables

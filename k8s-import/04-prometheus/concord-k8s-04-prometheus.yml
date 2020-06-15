@@ -6,12 +6,20 @@ flows:
 
   prometheus:
 
-    - task: helm
+
+    - task: kubectl
+      in:
+        command: create
+        namespace:
+          name: telemetry
+        envars: ${clusterRequest.envars}
+
+    - task: helm3
       in:
         command: upgrade
         chart:
           name: prometheus-operator
-          version: 6.11.0
+          version: 8.12.12
           namespace: telemetry
           value: stable/prometheus-operator
           values: "${profile}/prometheus/values.yaml"

@@ -5,7 +5,14 @@
 flows:
 
   fluentbit:
-    - task: helm
+    - task: kubectl
+      in:
+        command: create
+        namespace:
+          name: logging
+        envars: ${clusterRequest.envars}
+
+    - task: helm3
       in:
         command: upgrade
         chart:

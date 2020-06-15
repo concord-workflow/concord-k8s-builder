@@ -5,7 +5,14 @@
 flows:
 
   metacontroller:
-    - task: helm
+    - task: kubectl
+      in:
+        command: create
+        namespace:
+          name: metacontroller
+        envars: ${clusterRequest.envars}
+
+    - task: helm3
       in:
         command: upgrade
         chart:

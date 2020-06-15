@@ -8,7 +8,14 @@
 flows:
 
   s3proxy:
-    - task: helm
+    - task: kubectl
+      in:
+        command: create
+        namespace:
+          name: s3proxy
+        envars: ${clusterRequest.envars}
+
+    - task: helm3
       in:
         command: upgrade
         chart:

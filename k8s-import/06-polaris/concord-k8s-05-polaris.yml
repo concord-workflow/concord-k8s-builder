@@ -5,8 +5,16 @@
 flows:
 
   polaris:
+
+    - task: kubectl
+      in:
+        command: create
+        namespace:
+          name: polaris
+        envars: ${clusterRequest.envars}
+
    # Add the fairwinds Helm repository and update is implied
-    - task: helm
+    - task: helm3
       in:
         command: repo
         add:
@@ -14,12 +22,12 @@ flows:
           url: https://charts.fairwinds.com/stable
         envars: ${clusterRequest.envars}
 
-    - task: helm
+    - task: helm3
       in:
         command: upgrade
         chart:
           name: polaris
           namespace: polaris
-          version: 0.7.1
+          version: 0.10.2 
           value: reactiveops-stable/polaris
         envars: ${clusterRequest.envars}

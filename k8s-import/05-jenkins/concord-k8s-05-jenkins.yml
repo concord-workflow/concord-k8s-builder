@@ -8,7 +8,14 @@
 flows:
 
   jenkins:
-    - task: helm
+    - task: kubectl
+      in:
+        command: create
+        namespace:
+          name: jenkins
+        envars: ${clusterRequest.envars}  
+    
+    - task: helm3
       in:
         command: upgrade
         chart:

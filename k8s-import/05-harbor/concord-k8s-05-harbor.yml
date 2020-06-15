@@ -5,7 +5,14 @@
 flows:
 
   harbor:
-    - task: helm
+    - task: kubectl
+      in:
+        command: create
+        namespace:
+          name: harbor
+        envars: ${clusterRequest.envars}
+
+    - task: helm3
       in:
         command: repo
         add:
@@ -13,7 +20,7 @@ flows:
           url: https://helm.goharbor.io
         envars: ${clusterRequest.envars}
 
-    - task: helm
+    - task: helm3
       in:
         command: upgrade
         chart:

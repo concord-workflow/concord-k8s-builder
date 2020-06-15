@@ -5,7 +5,15 @@
 flows:
 
   concord:
-    - task: helm
+    
+    - task: kubectl
+      in:
+        command: create
+        namespace:
+          name: concord
+        envars: ${clusterRequest.envars}
+  
+    - task: helm3
       in:
         command: upgrade
         chart:

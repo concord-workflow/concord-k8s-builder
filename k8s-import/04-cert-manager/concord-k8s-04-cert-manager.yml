@@ -22,7 +22,7 @@ flows:
         envars: ${clusterRequest.envars}
 
     # Add the Jetstack Helm repository and update is implied
-    - task: helm
+    - task: helm3
       in:
         command: repo
         add:
@@ -31,13 +31,13 @@ flows:
         envars: ${clusterRequest.envars}
 
     # Install the cert-manager Helm chart
-    - task: helm
+    - task: helm3
       in:
         command: upgrade
         chart:
           name: cert-manager
           namespace: cert-manager
-          version: v0.12.0
+          version: v0.14.1
           value: jetstack/cert-manager
         envars: ${clusterRequest.envars}
 

@@ -5,12 +5,21 @@
 flows:
 
   ingress-nginx:
-    - task: helm
+  
+    - task: kubectl
+      in:
+        command: create
+        namespace:
+          name: ingress-nginx
+        envars: ${clusterRequest.envars}   
+
+    - task: helm3
       in:
         command: upgrade
         chart:
           name: ingress-nginx
-          value: "${k8sImport}/04-ingress-nginx/chart"
+          namespace: ingress-nginx
+          value: ingress-nginx/ingress-nginx
           values: "${profile}/ingress-nginx/values.yaml"
         envars: ${clusterRequest.envars}
 

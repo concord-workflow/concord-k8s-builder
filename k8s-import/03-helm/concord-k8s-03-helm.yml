@@ -1,26 +1,49 @@
 # ------------------------------------------------------------------------------
-# Helm
+# Helm Add required repos 
 # ------------------------------------------------------------------------------
 
 flows:
 
-  helm-install:
-    - task: kubectl
-      in:
-        command: apply
-        file: "${k8sImport}/03-helm/tiller-rbac.yml"
-        envars: ${clusterRequest.envars}
-
-    - task: helm
-      in:
-        command: init
-        serviceAccount: tiller
-        wait: true
-        envars: ${clusterRequest.envars}
-
   repo-update:
-    - task: helm
+
+    - task: helm3
+      in:
+        command: repo
+        add:
+          name: stable
+          url: https://kubernetes-charts.storage.googleapis.com
+
+    - task: helm3
+      in:
+        command: repo
+        add:
+          name: reactiveops-stable
+          url: https://charts.fairwinds.com/stable
+
+
+    - task: helm3
+      in:
+        command: repo
+        add:
+          name: bitnami
+          url: https://charts.bitnami.com/bitnami
+
+    - task: helm3
+      in:
+        command: repo
+        add:
+          name: external-secrets
+          url:  https://godaddy.github.io/kubernetes-external-secrets/   
+    
+    - task: helm3
+      in:
+        command: repo
+        add:
+          name: ingress-nginx
+          url:  https://kubernetes.github.io/ingress-nginx
+
+    - task: helm3
       in:
         command: repo
         update:
-          name : ""
+          name: ""

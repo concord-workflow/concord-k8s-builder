@@ -1,0 +1,27 @@
+# ------------------------------------------------------------------------------
+# Harbor Configuration Client
+# --------------------------------------------------------------------------------------------------------------------
+
+flows:
+
+  harbor-config:
+    - task: helm
+      in:
+        command: repo
+        add:
+          name: harbor-config
+          url: https://harbor.starburstdata.net/chartrepo/starburstdata
+          username: ${secrets.helmRepositoryUsername}
+          password: ${secrets.helmRepositoryPassword}
+        envars: ${clusterRequest.envars}
+
+    - task: helm
+      in:
+        command: upgrade
+        chart:
+          name: ${namespace}
+          namespace: ${namespace}
+          version: 1.0.0
+          value: harbor-config/harbor-config
+          values: "${profile}/harbor-config/values.yaml"
+        envars: ${clusterRequest.envars}

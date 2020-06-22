@@ -1,0 +1,9 @@
+
+flows:
+  event-router:
+    - task: kubectl
+      in:
+        command: apply
+        file: "${profile}/event-router/deployment.yaml"
+        envars: ${clusterRequest.envars}
+

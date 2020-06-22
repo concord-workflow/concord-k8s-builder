@@ -1,0 +1,20 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cni-metrics-service-monitor
+  namespace: telemetry
+  labels:
+    k8s-apps: http
+spec:
+  jobLabel: k8s-app
+  selector:
+    matchLabels:
+       k8s-app: cni-metrics
+  namespaceSelector:
+    matchNames:
+    - "kube-system"
+  endpoints:
+  - port: cni-metrics
+    interval: 15s
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token

@@ -1,0 +1,54 @@
+defaultRules:
+ create: false
+global:
+  rbac:
+    create: true
+    pspEnabled: true
+alertmanager:
+  enabled: false
+nodeExporter:
+  enabled: true
+grafana:
+ enabled: false
+prometheusOperator:
+  resources:
+   limits:
+    cpu: 1000m
+    memory: 1024Mi
+   requests:
+    cpu: 500m
+    memory: 512Mi
+
+prometheus: 
+  enabled: true
+  prometheusSpec:
+    externalLabels:
+       tenant: ${clusterRequest.clusterId}
+    serviceMonitorSelector: {}
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelector: {}
+    retention: 1h
+    resources:
+      limits:
+        cpu: 4096m
+        memory: 4Gi
+      requests:
+        cpu: 512m
+        memory: 2Gi
+  service:
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: ${clusterRequest.metricsDomain}
+  ingress:
+    enabled: true
+    hosts:
+    - ${clusterRequest.metricsDomain} 
+    tls:
+    - hosts:
+      - ${clusterRequest.metricsDomain} 
+      secretName: telemetry-federation-tls
+    annotations:  ${k8sContext.ingressAnnotations(context,7)}
+       nginx.ingress.kubernetes.io/ssl-redirect: "true"
+       nginx.ingress.kubernetes.io/auth-type: basic
+       nginx.ingress.kubernetes.io/auth-secret: federationcreds
+       nginx.ingress.kubernetes.io/rewrite-target: /
+       nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - ok"

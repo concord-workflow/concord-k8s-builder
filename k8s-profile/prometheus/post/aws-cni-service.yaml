@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: cni-metrics
+  name: cni-metrics-service
+  namespace: kube-system
+spec:
+  ports:
+  - name: cni-metrics
+    port: 61678
+    targetPort: 61678
+    protocol: TCP
+  selector:
+   k8s-app: aws-node

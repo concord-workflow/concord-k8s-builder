@@ -1,0 +1,2 @@
+- install the storage.yml as a postManifest
+- change the default storage class to ebs-sc

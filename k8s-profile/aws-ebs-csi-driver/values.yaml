@@ -1,0 +1,7 @@
+enableVolumeScheduling: true
+enableVolumeResizing: true
+enableVolumeSnapshot: false
+# tagging support in the latest master 
+extraVolumeTags: 
+  ${clusterRequest.aws.awsTags}
+  #k,v

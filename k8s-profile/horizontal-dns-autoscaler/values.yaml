@@ -1,0 +1,10 @@
+cpa:
+  image:
+    repository: k8s.gcr.io/cluster-proportional-autoscaler-amd64
+    tag: 1.7.1
+  command:
+    target: deployment/coredns
+  scaling:
+    coresPerReplica: 40
+    nodesPerReplica: 10
+    min: 3

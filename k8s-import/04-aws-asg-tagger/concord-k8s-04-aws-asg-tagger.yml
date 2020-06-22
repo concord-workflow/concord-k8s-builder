@@ -1,0 +1,19 @@
+
+flows:
+  aws-asg-tagger:
+    - task: kubectl
+      in:
+        command: create
+        namespace:
+          name: platform
+        envars: ${clusterRequest.envars}  
+
+    - task: helm3
+      in:
+        command: upgrade
+        chart:
+          name: asg-tagger
+          namespace: platform
+          value: "${k8sImport}/04-aws-asg-tagger/chart"
+          values: "${profile}/aws-asg-tagger/values.yaml"
+        envars: ${clusterRequest.envars}

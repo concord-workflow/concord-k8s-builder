@@ -1,0 +1,3 @@
+autotagger:
+  clusterregion: ${clusterRequest.region}
+  clustername: ${clusterRequest.clusterName}

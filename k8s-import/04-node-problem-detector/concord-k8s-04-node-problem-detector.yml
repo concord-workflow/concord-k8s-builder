@@ -1,0 +1,16 @@
+# ------------------------------------------------------------------------------
+# NGINX Ingress
+# ------------------------------------------------------------------------------
+
+flows:
+  node-problem-detector:
+    - task: helm3
+      in:
+        command: upgrade
+        chart:
+          name: node-problem-detector
+          namespace: kube-system
+          value: "${k8sImport}/04-fluentbit/chart"
+          values: "${profile}/fluentbit/values.yaml"
+        envars: ${clusterRequest.envars}
+

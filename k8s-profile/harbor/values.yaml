@@ -1,0 +1,21 @@
+expose:
+  ingress:
+    hosts:
+      core: harbor.${clusterRequest.domain}
+    annotations: ${k8sContext.ingressAnnotations(context,6)}
+  tls:
+    secretName: harbor-tls
+externalURL: https://harbor.${clusterRequest.domain}
+notary:
+  enabled: false
+persistence:
+  enabled: true
+  resourcePolicy: "keep"
+  imageChartStorage:
+    type: s3
+    s3:
+      region: "${clusterRequest.region}"
+      bucket: "harbor.${domain}"
+      accesskey: "${clusterRequest.aws.accessKey}"
+      secretkey: "${clusterRequest.aws.secretKey}"
+harborAdminPassword: "${secrets.adminPassword}"

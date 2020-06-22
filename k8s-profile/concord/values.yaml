@@ -1,0 +1,36 @@
+version: 1.48.0
+
+expose:
+  type: ingress
+  ingress:
+    host: concord.${clusterRequest.domain}
+    annotations: ${k8sContext.ingressAnnotations(context,6)}
+
+github:
+  enabled: true
+  domain: github.com
+  secret: ${secrets.gitHubWebHookSecret}
+
+agent:
+  dockerHost: tcp://localhost:6666
+  repositories:
+    - id: central
+      url: https://repo1.maven.org/maven2/
+    - id: jvz
+      url: https://oss.sonatype.org/content/repositories/snapshots
+  resources:
+    requests:
+      memory: 1G
+      cpu: 1
+    limits:
+      memory: 2G
+      cpu: 2
+
+dind:
+  resources:
+    requests:
+      memory: 2G
+      cpu: 1
+    limits:
+      memory: 3G
+      cpu: 2

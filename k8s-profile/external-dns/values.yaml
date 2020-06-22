@@ -1,0 +1,32 @@
+provider: aws
+aws:
+  zoneType: public
+txtOwnerId: ${clusterRequest.aws.hostedZoneId}
+domainFilters[0]: ${clusterRequest.domain}
+txtPrefix: ${clusterRequest.clusterName}
+rbac:
+  create: true
+# This allow external-dns to delete entries as well
+#policy: sync
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+podSecurityContext:
+  fsGroup: 1001
+  runAsUser: 1001
+  runAsNonRoot: true
+metrics:
+  enabled: true
+  ## Metrics exporter pod Annotation and Labels
+  ##
+  podAnnotations:
+     prometheus.io/scrape: "true"
+     prometheus.io/port: "7979"
+  ## Prometheus Operator ServiceMonitor configuration
+  ##
+  serviceMonitor:
+    enabled: ${k8sContext.featureEnabled('prometheus')}
+    namespace: telemetry

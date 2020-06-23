@@ -86,14 +86,6 @@ flows:
           withItems:
             - awsK8sClusterProvisioning
 
-    - if: ${helmVersion.equals('2.x')}
-      then:
-        - call: resilientFlow
-          in:
-            flow: ${item}
-          withItems:
-            - helm-install
-
     - if: ${clusterRequest.provider.equals('aws')}
       then:
         - awsK8sClusterExtensionsProvisioning

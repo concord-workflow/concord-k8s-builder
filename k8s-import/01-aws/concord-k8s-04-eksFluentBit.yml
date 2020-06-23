@@ -1,0 +1,26 @@
+# ------------------------------------------------------------------------------
+# EKS FluentBit - sends logs to CloudWatch
+# ------------------------------------------------------------------------------
+
+flows:
+
+  eksFluentBit:
+    - task: helm3
+      in:
+        command: repo
+        add:
+          name: eks
+          url: https://aws.github.io/eks-charts
+        envars: ${clusterRequest.envars}
+
+    - task: helm3
+      in:
+        command: upgrade
+        chart:
+          name: aws-for-fluent-bit
+          namespace: kube-system
+          version: "0.1.1"
+          value: "eks/aws-for-fluent-bit"
+          values: "${profile}/eksFluentBit/values.yaml"
+          timeout: 500
+        envars: ${clusterRequest.envars}

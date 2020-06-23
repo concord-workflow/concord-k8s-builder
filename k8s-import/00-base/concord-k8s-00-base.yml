@@ -75,6 +75,9 @@ flows:
   k8sClusterProvisioning:
     - log: "We are building a cluster on ${clusterRequest.provider} using ${clusterRequest.builder.id} ..."
 
+    # Update all the common Helm repos
+    - repo-update
+
     - if: ${clusterRequest.provider.equals('aws')}
       then:
         - call: resilientFlow

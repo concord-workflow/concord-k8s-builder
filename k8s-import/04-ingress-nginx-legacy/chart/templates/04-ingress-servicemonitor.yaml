@@ -1,0 +1,22 @@
+{{ if .Values.prometheus.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ingress-nginx-service-monitor
+  namespace: telemetry
+  labels:
+  labels:
+    app.kubernetes.io/name:  nginx-ingress-service-monitor
+    app.kubernetes.io/part-of: ingress-nginx
+spec:
+  endpoints:
+    - port: metrics
+      interval: 15s
+      honorLabels: true
+  namespaceSelector:
+    matchNames:
+      - "ingress-nginx"
+  selector:
+    matchLabels:
+      app.kubernetes.io/name:  nginx-ingress-metrics-service
+{{ end }}

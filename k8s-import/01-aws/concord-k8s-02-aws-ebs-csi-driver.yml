@@ -5,7 +5,7 @@
 flows:
 
   aws-ebs-csi-driver:
-    - task: helm
+    - task: helm3
       in:
         command: upgrade
         chart:

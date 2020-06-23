@@ -1,0 +1,34 @@
+# ------------------------------------------------------------------------------
+# Harbor Configuration Client
+# --------------------------------------------------------------------------------------------------------------------
+
+flows:
+
+  harbor-config:
+    - task: kubectl
+      in:
+        command: create
+        namespace:
+          name: harbor
+        envars: ${clusterRequest.envars}
+
+    - task: helm3
+      in:
+        command: repo
+        add:
+          name: harbor-config
+          url: "https://${clusterRequest.harborConfigs.helmUrl}"
+          username: ${secrets.helmRepositoryUsername}
+          password: ${secrets.helmRepositoryPassword}
+        envars: ${clusterRequest.envars}
+
+    - task: helm3
+      in:
+        command: upgrade
+        chart:
+          name: ${clusterRequest.harborConfigs.namespace}
+          namespace: ${clusterRequest.harborConfigs.namespace}
+          version: ${clusterRequest.harborConfigs.helmChartVersion}
+          value: harbor-config/harbor-config
+          values: "${profile}/harbor-config/values.yaml"
+        envars: ${clusterRequest.envars}

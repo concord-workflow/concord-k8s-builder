@@ -5,7 +5,7 @@ metadata:
   labels:
     app: asg-autotagger
 spec:
-  ttlSecondsAfterFinished: 100
+  successfulJobsHistoryLimit: 1
   schedule: "*/60 * * * *"
   jobTemplate:
     spec:

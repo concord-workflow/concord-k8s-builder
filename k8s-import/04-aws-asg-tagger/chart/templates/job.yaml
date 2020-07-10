@@ -5,6 +5,7 @@ metadata:
   labels:
     app: asg-autotagger
 spec:
+  ttlSecondsAfterFinished: 100
   schedule: "*/60 * * * *"
   jobTemplate:
     spec:
@@ -18,6 +19,6 @@ spec:
         spec:
           containers:
             - name: asg-pod-container
-              image: banst/awscli
+              image: banst/awscli:1.18.76
               command: ['sh','-c' ,"aws configure set default.region {{ .Values.autotagger.clusterregion }}; results=$(aws autoscaling describe-auto-scaling-groups | jq -c '.AutoScalingGroups[]|  select(.AutoScalingGroupName |  contains (\"{{ .Values.autotagger.clustername }}\"))| .AutoScalingGroupName ') ;for resourceId in $results;do  aws autoscaling create-or-update-tags --tags ResourceId=$resourceId,ResourceType=auto-scaling-group,Key=k8s.io/cluster-autoscaler/enabled,Value=yes,PropagateAtLaunch=true ResourceId=$resourceId,ResourceType=auto-scaling-group,Key=k8s.io/cluster-autoscaler/{{ .Values.autotagger.clustername }},Value=yes,PropagateAtLaunch=true; done; date;"]
           restartPolicy: OnFailure
